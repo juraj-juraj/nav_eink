@@ -39,9 +39,9 @@
 #include "GxEPD2_display_selection.h"
 #include "GxEPD2_display_selection_added.h"
 
-#define EPD_CS 14
+#define EPD_CS 5
 #define EPD_DC 16
-#define EPD_RST 5
+#define EPD_RST 27
 #define EPD_BUSY 4 // Changed from 4 to 26 for digital-only pin
 
 
