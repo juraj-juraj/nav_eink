@@ -1,85 +1,208 @@
 #include <Arduino.h>
 
+#define ENABLE_GxEPD2_GFX 0
 
-// GxEPD2_HelloWorld.ino by Jean-Marc Zingg
-//
-// Display Library example for SPI e-paper panels from Dalian Good Display and boards from Waveshare.
-// Requires HW SPI and Adafruit_GFX. Caution: the e-paper panels require 3.3V supply AND data lines!
-//
-// Display Library based on Demo Example from Good Display: https://www.good-display.com/companyfile/32/
-//
-// Author: Jean-Marc Zingg
-//
-// Version: see library.properties
-//
-// Library: https://github.com/ZinggJM/GxEPD2
-
-// Supporting Arduino Forum Topics (closed, read only):
-// Good Display ePaper for Arduino: https://forum.arduino.cc/t/good-display-epaper-for-arduino/419657
-// Waveshare e-paper displays with SPI: https://forum.arduino.cc/t/waveshare-e-paper-displays-with-spi/467865
-//
-// Add new topics in https://forum.arduino.cc/c/using-arduino/displays/23 for new questions and issues
-
-// see GxEPD2_wiring_examples.h for wiring suggestions and examples
-// if you use a different wiring, you need to adapt the constructor parameters!
-
-// uncomment next line to use class GFX of library GFX_Root instead of Adafruit_GFX
-//#include <GFX.h>
-
+#include <Adafruit_GFX.h>
 #include <GxEPD2_BW.h>
 #include <GxEPD2_3C.h>
-#include <GxEPD2_4C.h>
-#include <GxEPD2_7C.h>
-#include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeMonoBold18pt7b.h>
+#include <SPI.h>
 
-// select the display class and display driver class in the following file (new style):
-#include "GxEPD2_display_selection_new_style.h"
 
-// or select the display constructor line in one of the following files (old style):
-#include "GxEPD2_display_selection.h"
-#include "GxEPD2_display_selection_added.h"
+#define EPD_CS 5 // Set low to enable the device
+#define EPD_DC 16 // High for sending data, low for sending commands
+#define EPD_RST 27 // Reset, active in low. 10 ms pulse to reset
+#define EPD_BUSY 4 // Busy pin, active high, output from display
 
-#define EPD_CS 5
-#define EPD_DC 16
-#define EPD_RST 27
-#define EPD_BUSY 4 // Changed from 4 to 26 for digital-only pin
+SPIClass SPI_EPD(VSPI);
+
+void sendCommand(uint8_t cmd) {
+  digitalWrite(EPD_DC, LOW);
+  digitalWrite(EPD_CS, LOW);
+  SPI_EPD.transfer(cmd);
+  digitalWrite(EPD_CS, HIGH);
+}
+
+void sendData(uint8_t data) {
+  digitalWrite(EPD_DC, HIGH);
+  digitalWrite(EPD_CS, HIGH);
+  SPI_EPD.transfer(data);
+  digitalWrite(EPD_CS, LOW);
+  digitalWrite(EPD_CS, HIGH);
+}
+
+void sendCommandWithData(uint8_t cmd, uint8_t* data, int len) {
+  digitalWrite(EPD_DC, LOW);
+  digitalWrite(EPD_CS, LOW);
+  SPI_EPD.transfer(cmd);
+  digitalWrite(EPD_DC, HIGH);
+  for(int i = 0; i < len; i++) {
+    SPI_EPD.transfer(data[i]);
+  }
+  digitalWrite(EPD_CS, LOW);
+  digitalWrite(EPD_CS, HIGH);
+}
+
+void waitUntilIdle() {
+  // BUSY = HIGH --> busy, BUSY = LOW --> idle
+  while (digitalRead(EPD_BUSY) == HIGH) {
+    delay(1);
+  }
+}
+
+void panelReset() {
+  digitalWrite(EPD_RST, LOW);
+  delay(10);
+  digitalWrite(EPD_RST, HIGH);
+  delay(10);
+}
+
+void setup(){
+  Serial.begin(115200);
+  Serial.println("Hello World!");
+  pinMode(EPD_CS, OUTPUT);
+  pinMode(EPD_DC, OUTPUT);
+  pinMode(EPD_RST, OUTPUT);
+  pinMode(EPD_BUSY, INPUT_PULLUP);
+  digitalWrite(EPD_CS, LOW);
+  digitalWrite(EPD_DC, LOW);
+
+  digitalWrite(EPD_RST, HIGH);
+  delay(1000);
+  digitalWrite(EPD_RST, LOW);
+  delay(10);
+  digitalWrite(EPD_RST, HIGH);
+  delay(1000);
+  Serial.print("Busy pin state: ");
+  Serial.println(digitalRead(EPD_BUSY));
+  Serial.print("Writing commands to EPD...");
+
+
+  SPI_EPD.begin(SCK, MISO, MOSI, EPD_CS);
+  SPI_EPD.setFrequency(2000000); // 2 MHz is safe for most e-papers
+  SPI_EPD.setDataMode(SPI_MODE0);
+  SPI_EPD.setBitOrder(MSBFIRST);
+
+  panelReset();
+  Serial.print("Busy pin state: ");
+  Serial.println(digitalRead(EPD_BUSY));
+  sendCommand(0x12);           // SOFTWARE_RESET
+  waitUntilIdle();
+  Serial.println("Software reset done.");
+
+  sendCommand(0x01);           // DRIVER_OUTPUT_CONTROL
+  sendData(0xC7);
+  sendData(0x00);
+  sendData(0x00);
+  Serial.println("Driver output control done.");
+
+  // Data entry mode
+  sendCommand(0x11);
+  sendData(0x01);              // X increment, Y increment
+
+  // Set RAM X start/end (0 to 24 columns; adjust if your display is diff.)
+  sendCommand(0x44);
+  sendData(0x00);
+  sendData(0x18);
+  Serial.println("Set RAM X start/end done.");
+
+  // Set RAM Y start/end (here 199 down to 0 → 200 pixels)
+  sendCommand(0x45);
+  sendData(0xC7);  // Y start LSB
+  sendData(0x00);  // Y start MSB
+  sendData(0x00);  // Y end   LSB
+  sendData(0x00);  // Y end   MSB
+  Serial.println("Set RAM Y start/end done.");
+
+  // (Optional) Temperature sensor & LUT load
+  // sendCommand(0x1A); sendData( tempValue );      // TEMPERATURE_SENSOR_CONTROL
+  sendCommand(0x22); sendData(0xB1);               // LOAD_LUT_FROM_OTP
+  sendCommand(0x20);                               // MASTER_ACTIVATION
+  delay(100);
+  // waitUntilIdle();
+
+  // Set RAM counters to (0,0)
+  sendCommand(0x4E); sendData(0x00);               // SET_RAM_X_ADDRESS_COUNTER
+  sendCommand(0x4F);
+  sendData(0xC7);  // Y = 199 LSB
+  sendData(0x00);  // Y = 199 MSB
+  delay(100);
+  // waitUntilIdle();
+  Serial.println("Set RAM counters done.");
+
+  // === Write Image Buffers ===
+  // 1) Black/White
+  Serial.println("Writing black/white data...");
+  sendCommand(0x24);
+  for (int i = 0; i < 5000; i++) {
+    sendData(0xFF);  // replace with your actual BW data
+  }
+
+  // === Trigger Display Update ===
+  sendCommand(0x22);
+  sendData(0xC7);           // DISPLAY_UPDATE_CONTROL_2
+  sendCommand(0x20);        // MASTER_ACTIVATION
+  waitUntilIdle();
+
+  // Enter deep sleep
+  sendCommand(0x10);
+  sendData(0x01);
+
+}
+
+void loop(){
+
+}
 
 
 // alternately you can copy the constructor from GxEPD2_display_selection.h or GxEPD2_display_selection_added.h to here
-GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(GxEPD2_154_D67(/*CS=D8*/ EPD_CS, /*DC=D3*/ EPD_DC, /*RST=D4*/ EPD_RST, /*BUSY=D2*/ EPD_BUSY)); // GDEH0154D67
+// GxEPD2_BW<GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(GxEPD2_154_D67(/*CS=D8*/ EPD_CS, /*DC=D3*/ EPD_DC, /*RST=D4*/ EPD_RST, /*BUSY=D2*/ EPD_BUSY)); // GDEH0154D67
 
-// for handling alternative SPI pins (ESP32, RP2040) see example GxEPD2_Example.ino
-void helloWorld();
 
-void setup()
-{
-  //display.init(115200); // default 10ms reset pulse, e.g. for bare panels with DESPI-C02
-  display.init(115200, true, 10, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
-  helloWorld();
-  display.hibernate();
-}
 
-const char HelloWorld[] = "Hello World!";
 
-void helloWorld()
-{
-  display.setRotation(1);
-  display.setFont(&FreeMonoBold9pt7b);
-  display.setTextColor(GxEPD_BLACK);
-  int16_t tbx, tby; uint16_t tbw, tbh;
-  display.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
-  // center the bounding box by transposition of the origin:
-  uint16_t x = ((display.width() - tbw) / 2) - tbx;
-  uint16_t y = ((display.height() - tbh) / 2) - tby;
-  display.setFullWindow();
-  display.firstPage();
-  do
-  {
-    display.fillScreen(GxEPD_WHITE);
-    display.setCursor(x, y);
-    display.print(HelloWorld);
-  }
-  while (display.nextPage());
-}
 
-void loop() {};
+
+// const char HelloWorld[] = "Hello World!";
+// const char HelloWeACtStudio[] = "Yaser Ali Husen";
+
+// void helloWorld()
+// {
+//   display.setRotation(0);
+//   display.setFont(&FreeMonoBold18pt7b);
+//   display.setTextColor(GxEPD_BLACK);
+//   int16_t tbx, tby;
+//   uint16_t tbw, tbh;
+//   display.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
+//   // center the bounding box by transposition of the origin:
+//   uint16_t x = ((display.width() - tbw) / 2) - tbx;
+//   uint16_t y = ((display.height() - tbh) / 2) - tby;
+//   display.setFullWindow();
+//   display.firstPage();
+//   do
+//   {
+//     display.fillScreen(GxEPD_WHITE);
+//     display.setCursor(x, y-tbh);
+//     display.print(HelloWorld);
+//     display.setTextColor(display.epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
+//     display.getTextBounds(HelloWeACtStudio, 0, 0, &tbx, &tby, &tbw, &tbh);
+//     x = ((display.width() - tbw) / 2) - tbx;
+//     display.setCursor(x, y+tbh);
+//     display.print(HelloWeACtStudio);
+//   }
+//   while (display.nextPage());                   
+// }
+
+
+// void setup()
+// {
+//   display.init(115200,true,10,false);
+//   helloWorld();
+//   delay(1000);
+//   display.hibernate();
+// }
+
+
+// void loop() {
+
+// }

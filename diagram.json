@@ -18,5 +18,5 @@
     [ "epd1:RST", "esp:27", "green", [ "h-67.2", "v-38.4", "h-240", "v134.4" ] ],
     [ "epd1:DC", "esp:16", "green", [ "h-115.2", "v9.6" ] ]
   ],
-  "dependencies": {}
+  "dependencies": {} 
 }
