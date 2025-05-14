@@ -31,13 +31,13 @@ void sendData(uint8_t data) {
   digitalWrite(EPD_CS, HIGH);
 }
 
-void sendCommandWithData(uint8_t cmd, uint8_t* data, int len) {
+void sendCommandWithData(uint8_t cmd, std::initializer_list<uint8_t> data) {
   digitalWrite(EPD_DC, LOW);
   digitalWrite(EPD_CS, LOW);
   SPI_EPD.transfer(cmd);
   digitalWrite(EPD_DC, HIGH);
-  for(int i = 0; i < len; i++) {
-    SPI_EPD.transfer(data[i]);
+  for(auto B: data) {
+    SPI_EPD.transfer(B);
   }
   digitalWrite(EPD_CS, LOW);
   digitalWrite(EPD_CS, HIGH);
@@ -90,20 +90,15 @@ void setup(){
   waitUntilIdle();
   Serial.println("Software reset done.");
 
-  sendCommand(0x01);           // DRIVER_OUTPUT_CONTROL
-  sendData(0xC7);
-  sendData(0x00);
-  sendData(0x00);
+  sendCommandWithData(0x01, {0xC7, 0x00, 0x00}); // DRIVER_OUTPUT_CONTROL
+
   Serial.println("Driver output control done.");
 
   // Data entry mode
-  sendCommand(0x11);
-  sendData(0x01);              // X increment, Y increment
+  sendCommandWithData(0x11, {0x01}); // DATA_ENTRY_MODE_SETTING, X increment, Y decrement
 
-  // Set RAM X start/end (0 to 24 columns; adjust if your display is diff.)
-  sendCommand(0x44);
-  sendData(0x00);
-  sendData(0x18);
+  // Set RAM X start/end (0 to 24 columns)
+  sendCommandWithData(0x44, {0x00, 0x18}); // SET_RAM_X_ADDRESS_START_END
   Serial.println("Set RAM X start/end done.");
 
   // Set RAM Y start/end (here 199 down to 0 → 200 pixels)
@@ -114,12 +109,9 @@ void setup(){
   sendData(0x00);  // Y end   MSB
   Serial.println("Set RAM Y start/end done.");
 
-  // (Optional) Temperature sensor & LUT load
-  // sendCommand(0x1A); sendData( tempValue );      // TEMPERATURE_SENSOR_CONTROL
-  sendCommand(0x22); sendData(0xB1);               // LOAD_LUT_FROM_OTP
-  sendCommand(0x20);                               // MASTER_ACTIVATION
+  sendCommand(0x20);  // activate display update sequence
   delay(100);
-  // waitUntilIdle();
+  waitUntilIdle();
 
   // Set RAM counters to (0,0)
   sendCommand(0x4E); sendData(0x00);               // SET_RAM_X_ADDRESS_COUNTER
@@ -134,14 +126,18 @@ void setup(){
   // 1) Black/White
   Serial.println("Writing black/white data...");
   sendCommand(0x24);
-  for (int i = 0; i < 5000; i++) {
+  for (int i = 0; i < 4000; i++) {
     sendData(0xFF);  // replace with your actual BW data
+  }
+  for(int i = 0; i < 1000; i++) {
+    sendData(0x00);  // replace with your actual BW data
   }
 
   // === Trigger Display Update ===
-  sendCommand(0x22);
-  sendData(0xC7);           // DISPLAY_UPDATE_CONTROL_2
-  sendCommand(0x20);        // MASTER_ACTIVATION
+  // display update sequence
+  // enable clock signal, enable analog, display with display mode 1, disable analog, disable oscilator
+  sendCommandWithData(0x22, {0xC7}); 
+  sendCommand(0x20);        // Activate display update sequence
   waitUntilIdle();
 
   // Enter deep sleep
