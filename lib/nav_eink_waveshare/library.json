@@ -1,0 +1,17 @@
+{
+  "name": "nav_eink_waveshare",
+  "title": "Nav E-Ink Waveshare",
+  "version": "1.0.0",
+  "description": "Custom display library for e-ink screen with Adafruit GFX integration",
+  "keywords": ["eink", "display", "graphics", "gfx"],
+  "authors": [
+    {
+      "name": "Juraj Novosád",
+      "email": "xnovos13@stud.fit.vutbr.cz",
+      "url": "https://github.com/juraj-juraj/nav_eink"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"]
+}
