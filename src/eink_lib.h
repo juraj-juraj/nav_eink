@@ -2,13 +2,17 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#include "utils.h"
 
 #define BLACK 0
 #define WHITE 1
 
 #define EINK_HEIGHT 200
 #define EINK_WIDTH 200
+
+void debugPrint(const char* msg) {
+    if(DEBUG)
+        Serial.println(msg);
+}
 
 class SPIController{
 public:
