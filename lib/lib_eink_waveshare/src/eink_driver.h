@@ -7,6 +7,7 @@
 
 
 /**
+ * @class EinkColor
  * @brief Represents a color for e-ink displays.
  * 
  * This class encapsulates color values for e-ink displays, providing
@@ -39,6 +40,7 @@ constexpr EinkColor EinkColor::WHITE(1);
 
 
 /**
+ * @class DriverInterface
  * @brief Interface for E-ink display drivers.
  * 
  * This abstract class defines the interface that all E-ink display driver implementations
@@ -105,6 +107,7 @@ public:
 };
 
 /**
+ * @class Eink1in54Driver
  * @brief E-ink display driver for the 1.54 inch e-ink display.
  * 
  * This class implements the DriverInterface for the 1.54 inch e-ink display.

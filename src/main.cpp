@@ -1,3 +1,8 @@
+/**
+ * @file main.cpp
+ * @brief Demo showing capabilities of the display and the library.
+ */
+
 #define DEBUG true
 
 #include <Arduino.h>
@@ -53,7 +58,6 @@ void setup(){
 void loop(){
 
   panel.printf_text(70, 90, EinkColor::WHITE, "%02d:%02d:%02d", hour, minute, second);
-  // panel.display_frame();
   second++;  
   if(second == 60){
     second = 0;
