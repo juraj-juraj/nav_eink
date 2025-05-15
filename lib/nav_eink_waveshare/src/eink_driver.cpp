@@ -43,7 +43,7 @@ void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer){
 }
 
 
-void Eink1in54Driver::clear_frame(uint8_t color = 0xFF) {
+void Eink1in54Driver::clear_frame(uint8_t color) {
     if(color == BLACK) {
         color = 0x00; // Set to black
     } else {

@@ -1,15 +1,11 @@
 #include <Arduino.h>
 
-// #define ENABLE_GxEPD2_GFX 0
-
-// #include <Adafruit_GFX.h>
-// #include <GxEPD2_BW.h>
-// #include <GxEPD2_3C.h>
-// #include <Fonts/FreeMonoBold18pt7b.h>
-// #include <SPI.h>
 #define DEBUG true
 
-#include "eink_lib.h"
+
+#include <eink_driver.h>
+#include <spi_controller.h>
+#include <my_utils.h>
 
 #define EPD_CS 5 // Set low to enable the device
 #define EPD_DC 16 // High for sending data, low for sending commands
@@ -23,12 +19,12 @@ void setup(){
   Serial.println("Hello World!");
   
   auto m_spi = SPIController(EPD_CS, EPD_DC);
-  auto panel = EinkPanel(EPD_RST, EPD_BUSY, m_spi);
+  auto panel = Eink1in54Driver(EPD_RST, EPD_BUSY, m_spi);
   panel.init();
-  panel.clear_frame(WHITE);
+  panel.clear_frame(BLACK);
   panel.display_frame();
 
-  panel.clear_frame(WHITE);
+  panel.clear_frame(BLACK);
   panel.display_frame();
 
   panel.sleep();
