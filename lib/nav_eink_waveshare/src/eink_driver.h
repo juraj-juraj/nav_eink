@@ -26,7 +26,7 @@ class DriverInterface{
 public:
     virtual ~DriverInterface() = default;
 
-    virtual void init() = 0;
+    virtual void init(bool partial_update) = 0;
     virtual void set_frame_memory(const uint8_t* image_buffer) = 0;
     virtual void clear_frame(EinkColor color) = 0;
     virtual void display_frame() = 0;
@@ -40,7 +40,7 @@ class Eink1in54Driver: public DriverInterface{
 public:
     Eink1in54Driver(uint8_t rst, uint8_t busy, SPIController& spi_controller);
 
-    void init();
+    void init(bool partial_update = false);
 
     void set_frame_memory(const uint8_t* image_buffer);
 

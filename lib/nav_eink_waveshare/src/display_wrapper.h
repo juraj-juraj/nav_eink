@@ -61,7 +61,7 @@ public:
     void clear_frame(EinkColor color = EinkColor::BLACK) {
         m_canvas->fillScreen(color.value());
         
-        m_driver.init();
+        m_driver.init(false);
         m_driver.clear_frame(color);
         m_driver.display_frame();
 
@@ -71,7 +71,7 @@ public:
     }
 
     void display_frame() {
-        m_driver.init();
+        m_driver.init(false);
         m_driver.set_frame_memory(m_canvas->getBuffer());
         m_driver.display_frame();
         m_driver.sleep();
@@ -106,6 +106,7 @@ public:
     uint16_t get_canvas_height() const {
         return m_driver.get_height();
     }
+
 private:
     SPIController m_spi;
     DriverType m_driver;
