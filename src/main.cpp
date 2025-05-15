@@ -20,14 +20,28 @@ void setup(){
   Serial.begin(115200);
   Serial.println("Hello World!");
   
-  auto panel = DisplayWrapper<Eink1in54Driver>(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY);
+  auto panel = DisplayWrapper<Eink1in54Driver>(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY, 0.7, 2);
   panel.clear_frame(EinkColor::WHITE);
   delay(1000);
 
-  panel.fill_rect(80, 80, 50, 50, EinkColor::BLACK);
   panel.set_font(&FreeMono9pt7b);
-  panel.set_text_color(EinkColor::BLACK);
-  panel.print_text(10, 10, "Hello World!");
+
+  panel.fill_rect(80, 80, 50, 50, EinkColor::BLACK);
+  panel.print_text(10, 10, "Hello World!", EinkColor::BLACK);
+  panel.display_frame();
+  Serial.println("Stage 1");
+  delay(2000);
+  panel.print_text(10, 10, "Hello World!", EinkColor::WHITE);
+  panel.print_text(10, 10, "dlrow olleH!", EinkColor::BLACK);
+  panel.display_frame();
+  delay(2000);
+  panel.print_text(10, 10, "dlrow olleH!", EinkColor::WHITE);
+  panel.print_text(10, 10, "Hello World!", EinkColor::BLACK);
+  panel.display_frame();
+  
+  delay(2000);
+  panel.print_text(10, 10, "Hello World!", EinkColor::WHITE);
+  panel.print_text(10, 10, "dlrow olleH!", EinkColor::BLACK);
   panel.display_frame();
 
   // auto m_spi = SPIController(EPD_CS, EPD_DC);
@@ -44,5 +58,6 @@ void setup(){
 }
 
 void loop(){
-
+  // put your main code here, to run repeatedly:
+  delay(1000);
 }

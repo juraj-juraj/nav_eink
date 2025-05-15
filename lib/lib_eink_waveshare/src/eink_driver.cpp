@@ -36,7 +36,6 @@ void Eink1in54Driver::init(bool partial_update) {
             0x00, 0x00, 0x00, 0x00, 0xF8, 0xB4, 0x13, 0x51,
             0x35, 0x51, 0x51, 0x19, 0x01, 0x00});
     }
-    debug::Print("Write LUT register done.\nInit done.\n");
 }
 
 void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer){
@@ -50,6 +49,58 @@ void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer){
     m_SPI_controller.sendCommand(0x24); // WRITE_RAM command
     m_SPI_controller.sendData(image_buffer, M_WIDTH * M_HEIGHT / 8); // Send image data
     debug::Print("Image data sent.\n");
+}
+
+/**
+ * @brief Rounds down to the nearest multiple of 8.
+ * @param n The number to round down.
+ * @return The rounded number.
+ */
+uint16_t floorToMultipleOf8(uint16_t n) {
+    return n & ~0x07; // OR use (n / 8) * 8;
+}
+
+/**
+ * @brief Rounds up to the nearest multiple of 8.
+ * @param n The number to round up.
+ * @return The rounded number.
+ */
+uint16_t ceilToMultipleOf8(uint16_t n) {
+    return (n + 7) & ~0x07;
+}
+
+void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end){
+    if (image_buffer == nullptr) {
+        debug::Print("Image buffer is null.\n");
+        return;
+    }
+
+    if (x_start < 0 || x_end < 0 || y_start < 0 || y_end < 0) {
+        debug::Print("Coordinates out of bounds.\n");
+        return;
+    }
+
+    x_start = floorToMultipleOf8(x_start);
+    x_end = ceilToMultipleOf8(x_end);
+
+    uint16_t width = x_end - x_start;
+    uint16_t height = y_end - y_start + 1;
+
+    if (width > M_WIDTH || height > M_HEIGHT) {
+        debug::Print("Image dimensions exceed display size.\n");
+        return;
+    }
+
+    set_window(x_start, y_start, x_end, y_end);
+    set_cursor(x_start, y_start);
+    m_SPI_controller.sendCommand(0x24); // WRITE_RAM command
+    uint16_t line_size = width / 8;
+    uint16_t line_offset = y_start * (M_WIDTH / 8) + (x_start / 8);
+
+    for(uint16_t i = 0; i < height; i++) {
+        m_SPI_controller.sendData(image_buffer + line_offset + i * (M_WIDTH / 8), line_size); // Send image data
+    }
+    debug::Print("Partial image data sent.\n");
 }
 
 
@@ -73,7 +124,6 @@ void Eink1in54Driver::display_frame() {
     m_SPI_controller.sendCommand(0x20); // Trigger display refresh
     m_SPI_controller.sendCommand(0xFF); // Wait for the display to be ready
     wait_until_idle();
-    debug::Print("Display frame done.\n");
 }
 
 void Eink1in54Driver::set_window(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
@@ -86,8 +136,6 @@ void Eink1in54Driver::set_window(uint16_t x_start, uint16_t y_start, uint16_t x_
         (uint8_t)((y_start >> 8) & 0xFF),
         (uint8_t)(y_end & 0xFF),
         (uint8_t)((y_end >> 8) & 0xFF)}); // Set Y address start and end position
-
-    debug::Print("Window set.\n");
 }
 
 
@@ -95,7 +143,6 @@ void Eink1in54Driver::set_cursor(uint16_t x, uint16_t y) {
     m_SPI_controller.sendCommandWithData(0x4E, {(uint8_t)((x >> 3) & 0xFF)}); // Set RAM X address count to x
     m_SPI_controller.sendCommandWithData(0x4F, { (uint8_t)(y & 0xFF), (uint8_t)((y >> 8) & 0xFF)}); // Set RAM Y address count to y
     wait_until_idle();
-    debug::Print("Cursor set.\n");
 }
 
 

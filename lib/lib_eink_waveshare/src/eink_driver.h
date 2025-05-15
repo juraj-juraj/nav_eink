@@ -63,6 +63,17 @@ public:
      * @param image_buffer Pointer to buffer containing the image data to display.
      */
     virtual void set_frame_memory(const uint8_t* image_buffer) = 0;
+
+    /**
+     * @brief Set the display frame buffer with provided image data and coordinates.
+     * Partially updates the display memory with the provided image data.
+     * @param image_buffer Pointer to buffer containing the image data to display.
+     * @param x_start Start x coordinate for the image.
+     * @param y_start Start y coordinate for the image.
+     * @param x_end End x coordinate for the image.
+     * @param y_end End y coordinate for the image.
+     */
+    virtual void set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) = 0;
     
     /**
      * @brief Clear the entire display to a specific color.
@@ -125,6 +136,19 @@ public:
      * @param image_buffer Pointer to the image buffer to be displayed.
      */
     void set_frame_memory(const uint8_t* image_buffer);
+
+    /**
+     * @brief Set the frame memory with the provided image buffer and coordinates.
+     * This function partially updates the display memory with the provided image data.
+     * @param image_buffer Pointer to the image buffer to be displayed.
+     * @param x_start Start x coordinate for the image.
+     * @param y_start Start y coordinate for the image.
+     * @param x_end End x coordinate for the image.
+     * @param y_end End y coordinate for the image.
+     * @note The image buffer should be in the correct size for display, 5000 bytes long array
+     * (200x200 pixels, 1 bit per pixel).
+     */
+    void set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);
 
     /**
      * @brief Clear the display frame with a specific color.

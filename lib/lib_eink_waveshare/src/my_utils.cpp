@@ -2,5 +2,5 @@
 
 void debug::Print(const char* msg) {
     if(DEBUG)
-        Serial.println(msg);
+        Serial.print(msg);
 }
