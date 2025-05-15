@@ -1,12 +1,26 @@
+#pragma once
+
 #include <Arduino.h>
 
 #include "my_utils.h"
 #include "spi_controller.h"
 
-enum class EinkColor : uint8_t {
-    BLACK = 0,
-    WHITE = 1
+class EinkColor {
+public:
+    static const EinkColor BLACK;
+    static const EinkColor WHITE;
+
+    uint8_t value() const { return m_value; }
+
+    bool operator==(const EinkColor& other) const { return m_value == other.m_value; }
+
+private:
+    explicit constexpr EinkColor(uint8_t val) : m_value(val) {}
+    uint8_t m_value;
 };
+
+constexpr EinkColor EinkColor::BLACK(0);
+constexpr EinkColor EinkColor::WHITE(1);
 
 class DriverInterface{
 public:
@@ -14,7 +28,7 @@ public:
 
     virtual void init() = 0;
     virtual void set_frame_memory(const uint8_t* image_buffer) = 0;
-    virtual void clear_frame(uint8_t color = 0xFF) = 0;
+    virtual void clear_frame(EinkColor color) = 0;
     virtual void display_frame() = 0;
     virtual void sleep() = 0;
     virtual uint16_t get_width() const = 0;
@@ -30,7 +44,7 @@ public:
 
     void set_frame_memory(const uint8_t* image_buffer);
 
-    void clear_frame(EinkColor color = EinkColor::BLACK);
+    void clear_frame(EinkColor color);
 
     void display_frame();
 

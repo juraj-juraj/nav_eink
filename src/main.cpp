@@ -5,6 +5,7 @@
 
 #include <eink_driver.h>
 #include <spi_controller.h>
+#include <display_wrapper.h>
 #include <my_utils.h>
 
 #define EPD_CS 5 // Set low to enable the device
@@ -18,16 +19,23 @@ void setup(){
   Serial.begin(115200);
   Serial.println("Hello World!");
   
-  auto m_spi = SPIController(EPD_CS, EPD_DC);
-  auto panel = Eink1in54Driver(EPD_RST, EPD_BUSY, m_spi);
-  panel.init();
-  panel.clear_frame(BLACK);
+  auto panel = DisplayWrapper<Eink1in54Driver>(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY);
+  panel.clear_frame(EinkColor::WHITE);
+  delay(1000);
+  
+  panel.fill_rect(50, 50, 50, 50, EinkColor::BLACK);
   panel.display_frame();
 
-  panel.clear_frame(BLACK);
-  panel.display_frame();
+  // auto m_spi = SPIController(EPD_CS, EPD_DC);
+  // Eink1in54Driver panel = Eink1in54Driver(EPD_RST, EPD_BUSY, m_spi);
+  // panel.init();
+  // panel.clear_frame(EinkColor::WHITE);
+  // panel.display_frame();
 
-  panel.sleep();
+  // panel.clear_frame();
+  // panel.display_frame();
+
+  // panel.sleep();
 
 }
 
