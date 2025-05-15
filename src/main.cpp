@@ -22,8 +22,8 @@ void setup(){
   auto panel = DisplayWrapper<Eink1in54Driver>(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY);
   panel.clear_frame(EinkColor::WHITE);
   delay(1000);
-  
-  panel.fill_rect(50, 50, 50, 50, EinkColor::BLACK);
+
+  panel.fill_rect(80, 80, 50, 50, EinkColor::BLACK);
   panel.display_frame();
 
   // auto m_spi = SPIController(EPD_CS, EPD_DC);

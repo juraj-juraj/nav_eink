@@ -1,6 +1,6 @@
 {
-  "name": "nav_eink_waveshare",
-  "title": "Nav E-Ink Waveshare",
+  "name": "lib_eink_waveshare",
+  "title": "E-Ink Waveshare Library",
   "version": "1.0.0",
   "description": "Custom display library for e-ink screen with Adafruit GFX integration",
   "keywords": ["eink", "display", "graphics", "gfx"],
