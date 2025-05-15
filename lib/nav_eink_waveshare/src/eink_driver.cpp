@@ -43,17 +43,16 @@ void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer){
 }
 
 
-void Eink1in54Driver::clear_frame(uint8_t color) {
-    if(color == BLACK) {
-        color = 0x00; // Set to black
-    } else {
-        color = 0xFF; // Set to white
+void Eink1in54Driver::clear_frame(EinkColor color) {
+    uint8_t val = 0xFF; // Default to white
+    if(color == EinkColor::BLACK) {
+        uint8_t val = 0x00; // Set to black
     }
     set_window(0, 0, M_WIDTH-1, M_HEIGHT-1);
     set_cursor(0, 0);
     m_SPI_controller.sendCommand(0x24); // WRITE_RAM command
     for (uint16_t i = 0; i < (M_WIDTH * M_HEIGHT / 8); i++) {
-        m_SPI_controller.sendData(color); // Send color data
+        m_SPI_controller.sendData(val); // Send color data
     }
     debug::Print("Image data cleared.\n");
 }

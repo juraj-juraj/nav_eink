@@ -3,8 +3,10 @@
 #include "my_utils.h"
 #include "spi_controller.h"
 
-#define BLACK 0
-#define WHITE 1
+enum class EinkColor : uint8_t {
+    BLACK = 0,
+    WHITE = 1
+};
 
 class DriverInterface{
 public:
@@ -28,7 +30,7 @@ public:
 
     void set_frame_memory(const uint8_t* image_buffer);
 
-    void clear_frame(uint8_t color = 0xFF);
+    void clear_frame(EinkColor color = EinkColor::BLACK);
 
     void display_frame();
 
