@@ -130,7 +130,20 @@ public:
         m_canvas->setFont(font);
     }
 
-    void print_text(int16_t x, int16_t y, const char* text, EinkColor color = EinkColor::BLACK) {
+    void printf_text(int16_t x, int16_t y, EinkColor color, const char* format, ...) {
+        if(format == nullptr) {
+            debug::Print("Format is null.\n");
+            return;
+        }
+        va_list args;
+        va_start(args, format);
+        char buffer[128];
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        va_end(args);
+        print_text(x, y, color, buffer);
+    }
+
+    void print_text(int16_t x, int16_t y, EinkColor color, const char* text) {
         if(text == nullptr) {
             debug::Print("Text is null.\n");
             return;
@@ -148,14 +161,14 @@ public:
         m_canvas->print(text);
     }
 
-    void draw_bitmap(int16_t x, int16_t y, const uint8_t* bitmap, uint16_t w, uint16_t h) {
+    void draw_bitmap(int16_t x, int16_t y, const uint8_t* bitmap, uint16_t w, uint16_t h, EinkColor fw_color, EinkColor bg_color) {
         if(bitmap == nullptr) {
             debug::Print("Bitmap is null.\n");
             return;
         }
         update_bounding_box(x, y);
         update_bounding_box(x + w, y + h);
-        m_canvas->drawBitmap(x, y, bitmap, w, h, EinkColor::BLACK.value(), EinkColor::WHITE.value());
+        m_canvas->drawBitmap(x, y, bitmap, w, h, fw_color.value(), bg_color.value());
     }
 
     /**
