@@ -1,0 +1,39 @@
+# Makefile for generating documentation for EPaper Waveshare 1.54 Display Wrapper
+
+.PHONY: docs clean pdf html
+
+# Default target
+all: docs
+
+# Generate documentation (HTML and PDF)
+docs: html pdf
+
+# Generate HTML documentation
+html:
+	@echo "Generating HTML documentation..."
+	@doxygen Doxyfile
+	@echo "HTML documentation generated in docs/html/"
+	@echo "Open docs/html/index.html in your browser to view it."
+
+# Generate PDF documentation
+pdf: html
+	@echo "Generating PDF documentation..."
+	@cd docs/latex && make
+	@mkdir -p docs/pdf
+	@cp docs/latex/refman.pdf docs/pdf/EPaperWaveshareDisplayWrapper-manual.pdf
+	@echo "PDF documentation generated at docs/pdf/EPaperWaveshareDisplayWrapper-manual.pdf"
+
+# Clean documentation
+clean:
+	@echo "Cleaning documentation..."
+	@rm -rf docs
+	@echo "Documentation cleaned."
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  make html   - Generate HTML documentation using Doxygen"
+	@echo "  make pdf    - Generate PDF documentation from LaTeX output"
+	@echo "  make docs   - Generate both HTML and PDF documentation"
+	@echo "  make clean  - Remove generated documentation"
+	@echo "  make help   - Show this help message"

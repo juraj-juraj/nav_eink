@@ -1,8 +1,9 @@
-#include <Arduino.h>
-
 #define DEBUG true
 
+#include <Arduino.h>
 
+#include <Fonts/FreeMono9pt7b.h>
+#
 #include <eink_driver.h>
 #include <spi_controller.h>
 #include <display_wrapper.h>
@@ -24,6 +25,9 @@ void setup(){
   delay(1000);
 
   panel.fill_rect(80, 80, 50, 50, EinkColor::BLACK);
+  panel.set_font(&FreeMono9pt7b);
+  panel.set_text_color(EinkColor::BLACK);
+  panel.print_text(10, 10, "Hello World!");
   panel.display_frame();
 
   // auto m_spi = SPIController(EPD_CS, EPD_DC);

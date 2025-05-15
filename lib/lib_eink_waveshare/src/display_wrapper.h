@@ -96,6 +96,27 @@ public:
         m_canvas->fillCircle(x0, y0, r, color.value());
     }
 
+    void set_rotation(uint8_t r) {
+        m_canvas->setRotation(r);
+    }
+
+    void set_font(const GFXfont* font) {
+        m_canvas->setFont(font);
+    }
+    
+    void set_text_color(EinkColor color) {
+        m_canvas->setTextColor(color.value());
+    }
+
+    void print_text(int16_t x, int16_t y, const char* text) {
+        m_canvas->setCursor(x, y);
+        m_canvas->print(text);
+    }
+
+    /**
+     * @brief Set the display to dark mode.
+     * @note Just for fun :)
+     */
     void darkmode(){
         clear_frame(EinkColor::BLACK);
     }
@@ -110,5 +131,10 @@ public:
 private:
     SPIController m_spi;
     DriverType m_driver;
-    GFXCanvasBW* m_canvas;  
+    GFXCanvasBW* m_canvas;
+
+    uint16_t m_min_bounding_box_x;
+    uint16_t m_min_bounding_box_y; 
+    uint16_t m_max_bounding_box_x;
+    uint16_t m_max_bounding_box_y;
 };
