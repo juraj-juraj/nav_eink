@@ -174,13 +174,14 @@ public:
             debug::Print("Full refresh.\n");
             m_driver.init(false); // Full refresh
             m_refresh_number = 0;
-
+            m_driver.set_frame_memory(m_canvas->getBuffer());
         } else {
             debug::Print("Partial refresh.\n");
             m_driver.init(true); // Partial refresh
             m_refresh_number++;
+            m_driver.set_frame_memory(m_canvas->getBuffer(), m_min_bounding_box_x, m_min_bounding_box_y,
+                                              m_max_bounding_box_x, m_max_bounding_box_y);
         }
-        m_driver.set_frame_memory(m_canvas->getBuffer());
         m_driver.display_frame();
         m_driver.sleep();
         reset_bounding_box();

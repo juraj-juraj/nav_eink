@@ -58,7 +58,7 @@ void Eink1in54::set_frame_memory(const uint8_t* image_buffer){
  * @param n The number to round down.
  * @return The rounded number.
  */
-uint16_t floorToMultipleOf8(uint16_t n) {
+inline uint16_t floorToMultipleOf8(uint16_t n) {
     return n & ~0x07; // OR use (n / 8) * 8;
 }
 
@@ -67,42 +67,54 @@ uint16_t floorToMultipleOf8(uint16_t n) {
  * @param n The number to round up.
  * @return The rounded number.
  */
-uint16_t ceilToMultipleOf8(uint16_t n) {
+inline uint16_t ceilToMultipleOf8(uint16_t n) {
     return (n + 7) & ~0x07;
 }
 
-void Eink1in54::set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end){
+void Eink1in54::set_frame_memory(
+    const uint8_t* image_buffer,
+    uint16_t x_start, uint16_t y_start,
+    uint16_t x_end,   uint16_t y_end)
+{
     if (image_buffer == nullptr) {
         debug::Print("Image buffer is null.\n");
         return;
     }
 
-    if (x_start < 0 || x_end < 0 || y_start < 0 || y_end < 0) {
-        debug::Print("Coordinates out of bounds.\n");
-        return;
-    }
-
+    // Align to byte boundaries
     x_start = floorToMultipleOf8(x_start);
-    x_end = ceilToMultipleOf8(x_end);
+    x_end   = ceilToMultipleOf8(x_end);
 
-    uint16_t width = x_end - x_start;
+    // Compute width/height of the rect
+    uint16_t width  = x_end - x_start;
     uint16_t height = y_end - y_start + 1;
 
-    if (width > M_WIDTH || height > M_HEIGHT) {
+    // Sanity‐check
+    if (width  > M_WIDTH  || height > M_HEIGHT) {
         debug::Print("Image dimensions exceed display size.\n");
         return;
     }
 
-    set_window(x_start, y_start, x_end, y_end);
+    // Tell the display which window we’ll update
+    set_window(x_start, y_start, x_end - 1, y_end);
     set_cursor(x_start, y_start);
-    m_SPI_controller.sendCommand(0x24); // WRITE_RAM command
-    uint16_t line_size = width / 8;
-    uint16_t line_offset = y_start * (M_WIDTH / 8) + (x_start / 8);
+    m_SPI_controller.sendCommand(0x24); // WRITE_RAM
 
-    for(uint16_t i = 0; i < height; i++) {
-        m_SPI_controller.sendData(image_buffer + line_offset + i * (M_WIDTH / 8), line_size); // Send image data
+    // How many bytes each full row occupies in image_buffer
+    const uint16_t bytes_per_row = M_WIDTH / 8;
+
+    // For each scan‐line in our rectangle...
+    for (uint16_t row = y_start; row <= y_end; row++) {
+        // For each byte‐column in our rectangle...
+        for (uint16_t x = x_start; x < x_end; x += 8) {
+            // Compute the index into image_buffer
+            uint16_t byte_index = row * bytes_per_row + (x / 8);
+            uint8_t pixel_byte = image_buffer[byte_index];
+            // Push that byte out
+            m_SPI_controller.sendData(pixel_byte);
+        }
     }
-    debug::Print("Partial image data sent.\n");
+    debug::Print("Partial image data sent\n");
 }
 
 
