@@ -1,4 +1,0 @@
-[wokwi]
-version = 1
-elf = ".pio/build/wemos_d1_uno32/firmware.elf"
-firmware = ".pio/build/wemos_d1_uno32/firmware.bin"
