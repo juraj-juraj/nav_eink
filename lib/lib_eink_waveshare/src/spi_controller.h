@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <SPI.h>
 
+namespace EinkSPI {
+
 /**
  * @class SPIController
  * @brief Controls SPI communication with an e-paper display
@@ -81,3 +83,5 @@ private:
     uint8_t m_epd_cs;      ///< Chip select pin
     uint8_t m_epd_dc;      ///< Data/Command control pin
 };
+
+} // namespace EinkSPI

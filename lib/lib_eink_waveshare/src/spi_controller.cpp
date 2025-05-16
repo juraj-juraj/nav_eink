@@ -1,5 +1,6 @@
 #include "spi_controller.h"
 
+namespace EinkSPI {
 
 SPIController::SPIController(uint8_t cs, uint8_t dc):
     m_epd_cs(cs), m_epd_dc(dc), m_SPI_com(VSPI) {
@@ -52,3 +53,5 @@ void SPIController::sendCommandWithData(uint8_t cmd, const std::initializer_list
     m_SPI_com.writeBytes(data.begin(), data.size());
     digitalWrite(m_epd_cs, HIGH); // CS high to disable device
 }
+
+} // namespace EinkSPI

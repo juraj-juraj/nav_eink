@@ -5,7 +5,6 @@
 #include "my_utils.h"
 #include "spi_controller.h"
 
-
 /**
  * @class EinkColor
  * @brief Represents a color for e-ink displays.
@@ -39,20 +38,22 @@ constexpr EinkColor EinkColor::BLACK(0);
 constexpr EinkColor EinkColor::WHITE(1);
 
 
+namespace EinkDriver {
+
 /**
- * @class DriverInterface
+ * @class Interface
  * @brief Interface for E-ink display drivers.
  * 
  * This abstract class defines the interface that all E-ink display driver implementations
  * must conform to. It provides methods for initializing the display, setting display content,
  * clearing the display, and controlling power states.
  */
-class DriverInterface{
+class Interface{
 public:
     /**
      * @brief Virtual destructor to ensure proper cleanup in derived classes.
      */
-    virtual ~DriverInterface() = default;
+    virtual ~Interface() = default;
 
     /**
      * @brief Initialize the display.
@@ -107,23 +108,23 @@ public:
 };
 
 /**
- * @class Eink1in54Driver
+ * @class Eink1in54
  * @brief E-ink display driver for the 1.54 inch e-ink display.
  * 
- * This class implements the DriverInterface for the 1.54 inch e-ink display.
+ * This class implements the Interface for the 1.54 inch e-ink display.
  * It provides methods to initialize the display, set the frame memory, clear the display,
  * and control the display's power state.
  */
-class Eink1in54Driver: public DriverInterface{
+class Eink1in54: public Interface{
 public:
     /**
-     * @brief Constructor for the Eink1in54Driver class.
+     * @brief Constructor for the Eink1in54 class.
      * This only initializes the pins and the class. SPI controller has to be already initialized.
      * @param rst Pin number for the reset pin.
      * @param busy Pin number for the busy pin.
      * @param spi_controller Reference to the SPI controller object.
      */
-    Eink1in54Driver(uint8_t rst, uint8_t busy, SPIController& spi_controller);
+    Eink1in54(uint8_t rst, uint8_t busy, EinkSPI::SPIController& spi_controller);
 
     /**
      * @brief Initialize the display.
@@ -222,5 +223,7 @@ private:
 
     uint8_t m_epd_rst;
     uint8_t m_epd_busy;
-    SPIController& m_SPI_controller;
+    EinkSPI::SPIController& m_SPI_controller;
 };
+
+} // namespace EinkDriver

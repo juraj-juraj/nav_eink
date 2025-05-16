@@ -1,6 +1,8 @@
 #include "eink_driver.h"
 
-Eink1in54Driver::Eink1in54Driver(uint8_t rst, uint8_t busy, SPIController& spi_controller) :
+namespace EinkDriver {
+
+Eink1in54::Eink1in54(uint8_t rst, uint8_t busy, EinkSPI::SPIController& spi_controller) :
     m_SPI_controller(spi_controller), m_epd_rst(rst), m_epd_busy(busy) {
     pinMode(m_epd_rst, OUTPUT);
     pinMode(m_epd_busy, INPUT);
@@ -8,9 +10,9 @@ Eink1in54Driver::Eink1in54Driver(uint8_t rst, uint8_t busy, SPIController& spi_c
     digitalWrite(m_epd_rst, HIGH);
 }
 
-void Eink1in54Driver::init(bool partial_update) {
+void Eink1in54::init(bool partial_update) {
     panel_reset();
-    debug::Print("Eink1in54Driver initialized\n");
+    debug::Print("Eink1in54 initialized\n");
     debug::Print("Busy pin state: ");
     debug::Print(digitalRead(m_epd_busy) == HIGH ? "BUSY\n" : "IDLE\n");
 
@@ -38,7 +40,7 @@ void Eink1in54Driver::init(bool partial_update) {
     }
 }
 
-void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer){
+void Eink1in54::set_frame_memory(const uint8_t* image_buffer){
     if (image_buffer == nullptr) {
         debug::Print("Image buffer is null.\n");
         return;
@@ -69,7 +71,7 @@ uint16_t ceilToMultipleOf8(uint16_t n) {
     return (n + 7) & ~0x07;
 }
 
-void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end){
+void Eink1in54::set_frame_memory(const uint8_t* image_buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end){
     if (image_buffer == nullptr) {
         debug::Print("Image buffer is null.\n");
         return;
@@ -104,7 +106,7 @@ void Eink1in54Driver::set_frame_memory(const uint8_t* image_buffer, uint16_t x_s
 }
 
 
-void Eink1in54Driver::clear_frame(EinkColor color) {
+void Eink1in54::clear_frame(EinkColor color) {
     uint8_t val = 0xFF; // Default to white
     if(color == EinkColor::BLACK) {
         uint8_t val = 0x00; // Set to black
@@ -118,7 +120,7 @@ void Eink1in54Driver::clear_frame(EinkColor color) {
     debug::Print("Image data cleared.\n");
 }
 
-void Eink1in54Driver::display_frame() {
+void Eink1in54::display_frame() {
     m_SPI_controller.sendCommandWithData(0x22, {0xC4}); // DISPLAY_REFRESH command
     delay(10);
     m_SPI_controller.sendCommand(0x20); // Trigger display refresh
@@ -126,7 +128,7 @@ void Eink1in54Driver::display_frame() {
     wait_until_idle();
 }
 
-void Eink1in54Driver::set_window(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
+void Eink1in54::set_window(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
     m_SPI_controller.sendCommandWithData(0x44, {
         (uint8_t)((x_start >> 3) & 0xFF), 
         (uint8_t)((x_end >> 3) & 0xFF)}); // Set X address start and end position
@@ -139,14 +141,14 @@ void Eink1in54Driver::set_window(uint16_t x_start, uint16_t y_start, uint16_t x_
 }
 
 
-void Eink1in54Driver::set_cursor(uint16_t x, uint16_t y) {
+void Eink1in54::set_cursor(uint16_t x, uint16_t y) {
     m_SPI_controller.sendCommandWithData(0x4E, {(uint8_t)((x >> 3) & 0xFF)}); // Set RAM X address count to x
     m_SPI_controller.sendCommandWithData(0x4F, { (uint8_t)(y & 0xFF), (uint8_t)((y >> 8) & 0xFF)}); // Set RAM Y address count to y
     wait_until_idle();
 }
 
 
-void Eink1in54Driver::panel_reset() {
+void Eink1in54::panel_reset() {
     digitalWrite(m_epd_rst, HIGH);
     delay(100);
     digitalWrite(m_epd_rst, LOW);
@@ -157,15 +159,16 @@ void Eink1in54Driver::panel_reset() {
 
 
 
-void Eink1in54Driver::wait_until_idle() {
+void Eink1in54::wait_until_idle() {
     while (digitalRead(m_epd_busy) == HIGH) {
     delay(1);
     }
 }
 
 
-void Eink1in54Driver::sleep(){
+void Eink1in54::sleep(){
     debug::Print("Entering sleep mode...\n");
     m_SPI_controller.sendCommandWithData(0x10, {0x01}); // Enter deep sleep mode
 }
 
+} // namespace EinkDriver

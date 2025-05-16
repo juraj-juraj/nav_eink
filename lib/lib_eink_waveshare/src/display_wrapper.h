@@ -9,6 +9,9 @@
 #include "my_utils.h"
 #include "eink_driver.h"
 
+
+namespace EinkCanvas{
+
 /**
  * @class GFXCanvasBW
  * @brief Black and white canvas implementation for Adafruit GFX library
@@ -74,14 +77,19 @@ private:
     uint8_t *buffer;
 };
 
+} // namespace EinkCanvas
+
+
+namespace EinkDisplay{
+
 template <
     typename DriverType,
     typename = typename std::enable_if<
-        std::is_base_of<DriverInterface, DriverType>::value
+        std::is_base_of<EinkDriver::Interface, DriverType>::value
     >::type
 >
 /**
- * @class DisplayWrapper
+ * @class DisplayHandle
  * @brief A wrapper class for e-ink display operations that provides drawing functions and manages display refreshes.
  *
  * This class provides a high-level interface for interacting with e-ink displays, handling the
@@ -96,16 +104,16 @@ template <
  *
  * Usage example:
  * @code
- * DisplayWrapper display(8, 9, 10, 11); // CS, DC, RST, BUSY pins
+ * DisplayHandle display(8, 9, 10, 11); // CS, DC, RST, BUSY pins
  * display.clear_frame(EinkColor::WHITE);
  * display.draw_text(10, 20, EinkColor::BLACK, "Hello World");
  * display.display_frame();
  * @endcode
  */
-class DisplayWrapper {
+class DisplayHandle {
 public:
     /**
-     * @brief Constructs a new DisplayWrapper for e-paper/e-ink displays
+     * @brief Constructs a new DisplayHandle for e-paper/e-ink displays
      * 
      * This class wraps the hardware driver for e-ink displays and provides drawing functionality
      * with smart refresh management. It tracks modified areas and can decide between partial
@@ -121,15 +129,16 @@ public:
      * @note The constructor initializes an internal canvas of 200x200 pixels and calculates
      *       refresh thresholds based on the display dimensions.
      */
-    DisplayWrapper(uint8_t cs, uint8_t dc, uint8_t rst, uint8_t busy, float refresh_threshold = 0.7, uint8_t refresh_number = 10) :
+    DisplayHandle(uint8_t cs, uint8_t dc, uint8_t rst, uint8_t busy, float refresh_threshold = 0.7, uint8_t refresh_number = 10) :
         m_spi(cs, dc), m_driver(rst, busy, m_spi), m_refresh_threshold(refresh_number), m_refresh_number(0) {
-        m_canvas = new GFXCanvasBW(200, 200);
+        m_canvas = new EinkCanvas::GFXCanvasBW(200, 200);
+        m_canvas->fillScreen(EinkColor::WHITE.value());
         full_refresh_threshold_height = m_driver.get_height() * refresh_threshold;
         full_refresh_threshold_width = m_driver.get_width() * refresh_threshold;
         reset_bounding_box();
     }
 
-    ~DisplayWrapper() {
+    ~DisplayHandle() {
         delete m_canvas;
     }
 
@@ -289,7 +298,7 @@ public:
      * @param format The format string.
      * @param ... The values to be inserted into the format string.
      */
-    void printf_text(int16_t x, int16_t y, EinkColor color, const char* format, ...) {
+    void printf(int16_t x, int16_t y, EinkColor color, const char* format, ...) {
         if(format == nullptr) {
             debug::Print("Format is null.\n");
             return;
@@ -299,7 +308,7 @@ public:
         char buffer[128];
         vsnprintf(buffer, sizeof(buffer), format, args);
         va_end(args);
-        print_text(x, y, color, buffer);
+        print(x, y, color, buffer);
     }
 
     /**
@@ -310,7 +319,7 @@ public:
      * @param color The color of the text.
      * @param text The text to be printed.
      */
-    void print_text(int16_t x, int16_t y, EinkColor color, const char* text) {
+    void print(int16_t x, int16_t y, EinkColor color, const char* text) {
         if(text == nullptr) {
             debug::Print("Text is null.\n");
             return;
@@ -358,12 +367,12 @@ public:
     }
 
     /**
-     * @brief Set the internal cavnas to a specific color.
+     * @brief Set the internal canvas to a specific color.
      * This will also reset the bounding box of canvas.
      * Nothing will be drawn on the display. This just resets the canvas.
      * @param color The color to fill the canvas with.
      */
-    void clear_canvas(EinkColor color = EinkColor::WHITE) {
+    void clear_buffer(EinkColor color = EinkColor::WHITE) {
         m_canvas->fillScreen(EinkColor::WHITE.value());
         reset_bounding_box();
     }
@@ -431,9 +440,9 @@ private:
         return (width > full_refresh_threshold_width) && (height > full_refresh_threshold_height);
     }
 
-    SPIController m_spi;
+    EinkSPI::SPIController m_spi;
     DriverType m_driver;
-    GFXCanvasBW* m_canvas;
+    EinkCanvas::GFXCanvasBW* m_canvas;
 
     uint16_t m_min_bounding_box_x;
     uint16_t m_min_bounding_box_y; 
@@ -446,3 +455,5 @@ private:
     uint8_t m_refresh_number;
     const uint8_t m_refresh_threshold;
 };
+
+} // namespace EinkDisplay
