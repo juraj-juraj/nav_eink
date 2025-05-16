@@ -4,6 +4,8 @@ This library provides high level interface for using of waveshare eink display. 
 
 Graphic capabilities are accelerated using adafruit GFX library, which provides most graphic methods. Communication with display is heavily inspired from official library from vendor Waveshare.
 
+Demo showing usage of the library can be found here: <https://photos.app.goo.gl/GrZLcBDM5uErWVou9>
+
 ## Overview
 
 Aim of this library is to provide high level, easy  to use interface for e-ink displays. What differs this library from others are few main features:
